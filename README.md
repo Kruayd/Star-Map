@@ -52,6 +52,10 @@ To run it with any `X.Y` version:
 pythonX.Y /path to/Star_Map.py
 ```
 
+## Commands
+
+Use `w`, `a`, `s`, `d`, `r`, `f` and arrow keys to move
+
 ## Other info
 
 ### Authors
