@@ -40,16 +40,16 @@ If you want to run it with `Python3.8`, substitute `pygame` with `pygame==2.0.0.
 
 ## Running
 
-Simply double-click on `Test.py` if your main version is a `Python3` version or try typing in terminal:
+Simply double-click on `Star_Map.py` if your main version is a `Python3` version or try typing in terminal:
 
 ```
-python3 /path to/Test.py
+python3 /path to/Star_Map.py
 ```
 
 To run it with any `X.Y` version:
 
 ```
-pythonX.Y /path to/Test.py
+pythonX.Y /path to/Star_Map.py
 ```
 
 ## Other info
@@ -62,6 +62,10 @@ pythonX.Y /path to/Test.py
 
 This project is licensed under the **GNU GPLv3** - see the [LICENSE.md](LICENSE.md) file for details
 
+### Warnings
+
+See the [WARNINGS.md](WARNINGS.md) file for details
+
 ### Acknowledgments
 
 - Thanks to [The Cherno](https://www.youtube.com/user/TheChernoProject) for its awesome [OpenGL Crash Course](https://www.youtube.com/watch?v=W3gAzLwfIP0&list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2)
@@ -71,7 +75,7 @@ This project is licensed under the **GNU GPLv3** - see the [LICENSE.md](LICENSE.
 ### Roadmap
 
 - [x] Adding comments
-- [ ] Implementing Celestia data reading
+- [x] Implementing Celestia data reading
 - [ ] Tweaking stars fragment shader
 - [ ] Adding some GUI functions
 - [ ] Debugging
