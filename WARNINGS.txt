@@ -1,0 +1,28 @@
+183 coordinates tuple
+
+# BARICENTRI
+
+60 - 14 totali
+
+51 - 14 fondamentali
+
+# STAR
+
+49 + 75 + 8 
+
+- EPS Ind       # sistema triplo
+- GJ 1245       # sistema triplo
+- Gliese 412
+- Keid
+- GJ 1116
+- Gliese 229
+- Gliese 752
+- 36 Oph        # sistema triplo
+- Gliese 783
+- Gliese 664    # sistema quadruplo
+- Gliese 105    # sistema quadruplo
+- Gliese 667    # sistema triplo
+
+
+- Gliese 169.1: added " # orbit of A & B of poor quality"
+- LTT 1445: added " # orbit of A & (BC) unknown ME"
