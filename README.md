@@ -80,7 +80,7 @@ See the [WARNINGS.md](WARNINGS.md) file for details
 
 - [x] Adding comments
 - [x] Implementing Celestia data reading
-- [ ] Tweaking stars fragment shader
+- [X] Tweaking stars fragment shader
 - [ ] Adding some GUI functions
 - [ ] Debugging
 - [ ] Official release
