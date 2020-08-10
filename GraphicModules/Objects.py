@@ -25,63 +25,24 @@ textures_path = res_path + 'textures/'
 
 
 
-# Cartesian grid vertices
-grid_vertices = np. array(
-                        [ -5., -10., 0.,        #0
-                         -2.5, -10., 0.,        #1
-                           0., -10., 0.,        #2
-                          2.5, -10., 0.,        #3
-                           5., -10., 0.,        #4
-
-                           5., -7.5, 0.,        #5
-                           5.,  -5., 0.,        #6
-                           5., -2.5, 0.,        #7
-                           5.,   0., 0.,        #8
-                           5.,  2.5, 0.,        #9
-                           5.,   5., 0.,        #10
-                           5.,  7.5, 0.,        #11
-                           5.,  10., 0.,        #12
-
-                          2.5,  10., 0.,        #13
-                           0.,  10., 0.,        #14
-                         -2.5,  10., 0.,        #15
-                          -5.,  10., 0.,        #16
-
-                          -5.,  7.5, 0.,        #17
-                          -5.,   5., 0.,        #18
-                          -5.,  2.5, 0.,        #19
-                          -5.,   0., 0.,        #20
-                          -5., -2.5, 0.,        #21
-                          -5.,  -5., 0.,        #22
-                          -5., -7.5, 0.],       #23
-                         dtype = 'single'
-                        )
-
-# Vertices drawing order
-grid_indices = np.array(
-                        [0,  4,
-                         4, 12,
-                        12, 16,
-                        16,  0,
-
-                         1, 15,
-                         2, 14,
-                         3, 13,
-
-                         5, 23,
-                         6, 22,
-                         7, 21,
-                         8, 20,
-                         9, 19,
-                        10, 18,
-                        11, 17],
-                        dtype = 'uintc')
-
-
-
 class Grid:
 
     def __init__(self):
+
+        grid_vertices = []
+
+        for i in range(0, 121):
+            if i % 10:
+                grid_vertices.extend([60. - i, 60., 0.,
+                                      60. - i, -60., 0.])
+        for i in range(0, 121):
+            if i % 10:
+                grid_vertices.extend([60., 60. - i, 0.,
+                                      -60., 60. - i, 0.])
+
+        grid_vertices = np.array(grid_vertices, dtype = 'single')
+        grid_indices = np.array(list(range(0, 432)), dtype = 'uintc')
+
 
         # Initialize Vertex Array and Buffer
         self._va = va.VertexArray()
@@ -97,7 +58,7 @@ class Grid:
         self._ib = ib.IndexBuffer(grid_indices)
 
         # Shader
-        self._shader = shd.Shader(shaders_path + 'Grid.glsl')
+        self._shader = shd.Shader(shaders_path + 'TransparentBlue.glsl')
 
     # Drawing function
     def Draw(self, mvp, renderer):
@@ -123,36 +84,56 @@ class nearstars:
         # and add it to the vertex array
         self._layout = vbl.VertexBufferLayout()
         self._layout.PushFloat(3)
-        self._layout.PushFloat(3)
+        self._layout.PushFloat(4)
         self._va.AddBuffer(self._layout)
 
         # Update buffer for the first time
-        self.UpdateBuffer(np.array([0., 0., 0.], dtype = 'single'), init = True)
+        center = np.array([0., 0., 0.], dtype = 'single')
+        self._vb.Bind()
+
+        # Get all stars within grid range:
+        # center.x - 30 <= x < center.x + 30
+        # center.y - 30 <= y < center.y + 30
+        # center.z - 10 <= z < center.z + 10
+        visiblestars = self._df[(center[0]-30 <= self._df.x) &
+                                (self._df.x < center[0]+30)]
+
+        visiblestars = visiblestars[(center[1]-30 <= visiblestars.y) &
+                                    (visiblestars.y < center[1]+30)]
+
+        visiblestars = visiblestars[(center[2]-10 <= visiblestars.z) &
+                                    (visiblestars.z < center[2]+10)]
+
+        self._count = len(visiblestars.index)
+
+        # Generate array
+        vsa = visiblestars.to_numpy(dtype = 'single').flatten()
+
+        # Update Vertex Buffer
+        self._vb.Fill(vsa)
 
         # Shader
         self._shader = shd.Shader(shaders_path + 'Star.glsl')
 
-    # Function which updates the vertex buffer depending on the the center
-    # coordinates. The init status must be set True only for the first update
-    def UpdateBuffer(self, center, init = False):
 
-        if not init:
-            self._vb.Bind()
+    # Function which updates the vertex buffer depending on the the center
+    # coordinates.
+    def UpdateBuffer(self, center):
 
         # Get all stars within grid range:
-        # center.x - 5 <= x < center.x + 5
-        # center.y - 10 <= y < center.y + 10
-        # center.z - 5 <= z < center.z +5
-        visiblestars = self._df[(center[0]-5 <= self._df.x) & (self._df.x < center[0]+5)]
-        visiblestars = visiblestars[(center[1]-10 <= visiblestars.y) & (visiblestars.y < center[1]+10)]
-        visiblestars = visiblestars[(center[2]-5 <= visiblestars.z) & (visiblestars.z < center[2]+5)]
+        # center.x - 30 <= x < center.x + 30
+        # center.y - 30 <= y < center.y + 30
+        # center.z - 10 <= z < center.z + 10
+        visiblestars = self._df[(center[0]-30 <= self._df.x) &
+                                (self._df.x < center[0]+30)]
+
+        visiblestars = visiblestars[(center[1]-30 <= visiblestars.y) &
+                                    (visiblestars.y < center[1]+30)]
+
+        visiblestars = visiblestars[(center[2]-10 <= visiblestars.z) &
+                                    (visiblestars.z < center[2]+10)]
 
         self._count = len(visiblestars.index)
-
-        # Translate stars
-        visiblestars.x -= center[0]
-        visiblestars.y -= center[1]
-        visiblestars.z -= center[2]
 
         # Generate array
         vsa = visiblestars.to_numpy(dtype = 'single').flatten()

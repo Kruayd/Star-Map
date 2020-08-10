@@ -13,6 +13,7 @@ import numpy as np
 # transpose(A*B*C*columnvector) = rowvector*t(C)*t(B)*t(A)
 
 
+
 #  ________________________________________________
 # |                                                |
 # | module part relative to matrix transformations |
@@ -63,38 +64,57 @@ def matrixmultiplication(*args, datatype = 'single'):
 
     return result
 
-# Remember that a basis trasformation is the inverse of the corrseponding
-# object transformation
+
+
+#  ____________________________________________________
+# |                                                    |
+# | module part relative to Euler angles and rotations |
+# |____________________________________________________|
+#
+
+# Data taken from https://en.wikipedia.org/wiki/Celestial_coordinate_system
+# and referring to J2000
+RAg = 192.85948     # Right ascension of the Galactic North Pole
+DECg = 27.12825     # Declination of the Galactic North Pole
+Lnp = 122.93192     # Galactic longitude of the North Celestial Pole
+
+# Evaluation of Euler angles in radiants
+Ac = (RAg + 90) * np.pi / 180   # Right ascension of the intersection
+                                # between the galactic and equatorial
+                                # planes
+
+Pc = (90 - DECg) * np.pi / 180  # Conversion of Galactic North Pole
+                                # declination to spherical polar angle
+
+CB = (90 - Lnp) * np.pi / 180   # Angle between the galactic and equatorial
+                                # planes intersection and the center of the
+                                # galaxy direction
+
+# Set of rotations that brings the Vernal Point (x-axis) on the
+# intersection between the galactinc and equatorial planes (Rz(Ac)), then place the
+# North Pole (z-axis) in the direction of the Galactic North Pole (Rx(Pc)) and finally align
+# the x-axis with the Center of the Milky Way (Rz(CB))
+#
+# Since we have to transform the coordinates, and not the basis, we have to
+# use the inverse transformations but in the same order:
+# [Rz(Ac)**-1] * [Rx(Pc)**-1] * [Rz(CB)**-1]
+# = Rz(-Ac) * Rx(-Pc) * Rz(-CB)
+Rz1 = Rz(-Ac)
+Rx1 = Rx(-Pc)
+Rz2 = Rz(-CB)
 
 
 
-#  ________________________________________________
-# |                                                |
-# | module part relative to matrix transformations |
-# |________________________________________________|
+#  ____________________________________________
+# |                                            |
+# | module part relative to coordinates change |
+# |____________________________________________|
 #
 
 # Function needed to transition from equatorial to galactic rectangular
 # ones
 def changecoordsEQ(coords = np.array([0, 0, 0], dtype = 'single')):
 
-    # Data taken from https://en.wikipedia.org/wiki/Celestial_coordinate_system
-    # and referring to J2000
-    RAg = 192.85948     # Right ascension of the Galactic North Pole
-    DECg = 27.12825     # Declination of the Galactic North Pole
-    Lnp = 122.93192     # Galactic longitude of the North Celestial Pole
-
-    # Evaluation of Euler angles in radiants
-    Ac = (RAg + 90) * np.pi / 180   # Right ascension of the intersection
-                                    # between the galactic and equatorial
-                                    # planes
-
-    Pc = (90 - DECg) * np.pi / 180  # Conversion of Galactic North Pole
-                                    # declination to spherical polar angle
-
-    CB = (90 - Lnp) * np.pi / 180   # Angle between the galactic and equatorial
-                                    # planes intersection and the center of the
-                                    # galaxy direction
 
     # What follows has as a precondition the fact that the coordinates are
     # ordered like this: (distance, right ascension, declination)
@@ -109,43 +129,12 @@ def changecoordsEQ(coords = np.array([0, 0, 0], dtype = 'single')):
                         coords[0] * np.cos(coords[2])],
                        dtype = 'single')
 
-    # Set of rotations that brings the Vernal Point (x-axis) on the
-    # intersection between the galactinc and equatorial planes (Rz(Ac)), then place the
-    # North Pole (z-axis) in the direction of the Galactic North Pole (Rx(Pc)) and finally align
-    # the x-axis with the Center of the Milky Way (Rz(CB))
-    #
-    # Since we have to transform the coordinates, and not the basis, we have to
-    # use the inverse transformation:
-    # [Rz(Ac) * Rx(Pc) * Rz(CB)]**-1 = [Rz(CB)**-1] * [Rx(Pc)**-1] * [Rz(Ac)**-1]
-    # = Rz(-CB) * Rx(-Pc) * Rz(-Ac)
-    Rz1 = Rz(-CB)
-    Rx1 = Rx(-Pc)
-    Rz2 = Rz(-Ac)
-
     return matrixmultiplication(coords1, Rz1, Rx1, Rz2)
 
 
 # Function needed to transition from celestia/ecliptic to galactic rectangular
 # ones
 def changecoordsEC(coords = np.array([0, 0, 0], dtype = 'single')):
-
-    # Data taken from https://en.wikipedia.org/wiki/Celestial_coordinate_system
-    # and referring to J2000
-    RAg = 192.85948     # Right ascension of the Galactic North Pole
-    DECg = 27.12825     # Declination of the Galactic North Pole
-    Lnp = 122.93192     # Galactic longitude of the North Celestial Pole
-
-    # Evaluation of Euler angles in radiants
-    Ac = (RAg + 90) * np.pi / 180   # Right ascension of the intersection
-                                    # between the galactic and equatorial
-                                    # planes
-
-    Pc = (90 - DECg) * np.pi / 180  # Conversion of Galactic North Pole
-                                    # declination to spherical polar angle
-
-    CB = (90 - Lnp) * np.pi / 180   # Angle between the galactic and equatorial
-                                    # planes intersection and the center of the
-                                    # galaxy direction
 
     # The following operation are based on what's stated here:
     # https://en.wikibooks.org/wiki/Celestia/Binary_Star_File
@@ -165,18 +154,5 @@ def changecoordsEC(coords = np.array([0, 0, 0], dtype = 'single')):
     coords1[0] = x1
     coords1[1] = y1
     coords1[2] = z1
-
-    # Set of rotations that brings the Vernal Point (x-axis) on the
-    # intersection between the galactinc and equatorial planes (Rz(Ac)), then place the
-    # North Pole (z-axis) in the direction of the Galactic North Pole (Rx(Pc)) and finally align
-    # the x-axis with the Center of the Milky Way (Rz(CB))
-    #
-    # Since we have to transform the coordinates, and not the basis, we have to
-    # use the inverse transformation:
-    # [Rz(Ac) * Rx(Pc) * Rz(CB)]**-1 = [Rz(CB)**-1] * [Rx(Pc)**-1] * [Rz(Ac)**-1]
-    # = Rz(-CB) * Rx(-Pc) * Rz(-Ac)
-    Rz1 = mm.Rz(-CB)
-    Rx1 = mm.Rx(-Pc)
-    Rz2 = mm.Rz(-Ac)
 
     return matrixmultiplication(coords1, Rz1, Rx1, Rz2)

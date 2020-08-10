@@ -23,19 +23,17 @@ def main():
 
     gl.glEnable(gl.GL_BLEND)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+    gl.glEnable(gl.GL_POINT_SPRITE)
     gl.glEnable(gl.GL_PROGRAM_POINT_SIZE)
     gl.glEnable(gl.GL_DEPTH_TEST)
     gl.glEnable(gl.GL_MULTISAMPLE)
 
     av_pos = 60.0
     bv_pos = 0.0
-    cv_pos = -60.0
+    cv_pos = -90.0
 
     proj = mm.perspective(60., display[0] / display[1], 10., 20000.)
-    viewt = mm.viewtranslation(0, 0, 28)
-    viewr = mm.viewrotation(av_pos, bv_pos, cv_pos)
-
-    mvp = mm.matrixmultiplication(viewr, viewt, proj)
+    viewt = mm.viewtranslation(0, 0, 25)
 
     renderer = rnd.Renderer()
 
@@ -62,20 +60,20 @@ def main():
                 pygame.quit()
                 quit()
 
-        if keys[K_a]:
+        if keys[K_s]:
             x_pos += -t_speed * dt
             center[0] = x_pos
             stars.UpdateBuffer(center)
-        if keys[K_d]:
+        if keys[K_w]:
             x_pos += t_speed * dt
             center[0] = x_pos
             stars.UpdateBuffer(center)
-        if keys[K_s]:
-            y_pos += -t_speed * dt
+        if keys[K_a]:
+            y_pos += t_speed * dt
             center[1] = y_pos
             stars.UpdateBuffer(center)
-        if keys[K_w]:
-            y_pos += t_speed * dt
+        if keys[K_d]:
+            y_pos += -t_speed * dt
             center[1] = y_pos
             stars.UpdateBuffer(center)
         if keys[K_r]:
@@ -98,12 +96,14 @@ def main():
 
         renderer.Clear()
 
+        modelt = mm.modeltranslation(-x_pos, -y_pos, -z_pos)
         viewr = mm.viewrotation(av_pos, bv_pos, cv_pos)
 
         mvp = mm.matrixmultiplication(viewr, viewt, proj)
+        mvpstar = mm.matrixmultiplication(modelt, viewr, viewt, proj)
 
         grid.Draw(mvp, renderer)
-        stars.Draw(mvp, renderer)
+        stars.Draw(mvpstar, renderer)
 
         pygame.display.flip()
 
