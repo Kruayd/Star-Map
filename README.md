@@ -81,6 +81,7 @@ See the [WARNINGS.md](WARNINGS.md) file for details
 - [x] Adding comments
 - [x] Implementing Celestia data reading
 - [X] Tweaking stars fragment shader
+- [ ] Implementing Dual depth Peeling
 - [ ] Adding some GUI functions
 - [ ] Debugging
 - [ ] Official release

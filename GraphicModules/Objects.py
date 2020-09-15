@@ -27,18 +27,18 @@ textures_path = res_path + 'textures/'
 
 class Grid:
 
-    def __init__(self):
+    def __init__(self, color = (0., 0.42, 1., 0.5)):
 
         grid_vertices = []
 
         for i in range(0, 121):
             if i % 10:
-                grid_vertices.extend([60. - i, 60., 0.,
-                                      60. - i, -60., 0.])
+                grid_vertices.extend([60. - i, 60., 0.,     *color,
+                                      60. - i, -60., 0.,    *color])
         for i in range(0, 121):
             if i % 10:
-                grid_vertices.extend([60., 60. - i, 0.,
-                                      -60., 60. - i, 0.])
+                grid_vertices.extend([60., 60. - i, 0.,     *color,
+                                      -60., 60. - i, 0.,    *color])
 
         grid_vertices = np.array(grid_vertices, dtype = 'single')
         grid_indices = np.array(list(range(0, 432)), dtype = 'uintc')
@@ -52,20 +52,51 @@ class Grid:
         # to the vertex array
         self._layout = vbl.VertexBufferLayout()
         self._layout.PushFloat(3)
+        self._layout.PushFloat(4)
         self._va.AddBuffer(self._layout)
 
         # Index Buffer
         self._ib = ib.IndexBuffer(grid_indices)
 
-        # Shader
-        self._shader = shd.Shader(shaders_path + 'TransparentBlue.glsl')
+        # Shaders:
+        # - InitShader
+        # - PeelShader
+        self._InitShader = shd.Shader(shaders_path + 'ColoredMeshInit.glsl')
+        self._PeelShader = shd.Shader(shaders_path + 'ColoredMeshPeel.glsl')
+
+        # Uniforms
+        # - MVP
+        self._mvp = np.array([[1., 0., 0., 0.],
+                              [0., 1., 0., 0.],
+                              [0., 0., 1., 0.],
+                              [0., 0., 0., 1.]], dtype = 'single')
+
+    # Update model view projection matrix
+    def UpdateMVP(self, mvp):
+        self._mvp = mvp
+
+    # Bind self._InitShader
+    def BindInitShader(self):
+        self._InitShader.Bind()
+        self._InitShader.SetUniformMat4f('u_MVP', self._mvp)
+
+    # Bind self._PeelShader
+    def BindPeelShader(self, screensize = np.array([100, 100], dtype =
+                                                   'single')):
+        self._PeelShader.Bind()
+        self._PeelShader.SetUniformMat4f('u_MVP', self._mvp)
+        self._PeelShader.SetUniform2fv('u_Res', screensize)
+        # The Depth Texture and the Front Blending Texture are bindend
+        # respectively to the zeroth and the first slot
+        self._PeelShader.SetUniform1i('u_DepthTex', 0)
+        self._PeelShader.SetUniform1i('u_FrontBlender', 1)
 
     # Drawing function
-    def Draw(self, mvp, renderer):
-        self._shader.Bind()
-        self._shader.SetUniformMat4f('u_MVP', mvp)
-
-        renderer.DrawL(self._va, self._ib, self._shader)
+    def Draw(self):
+        self._va.Bind()
+        self._ib.Bind()
+        gl.glDrawElements(gl.GL_LINES, self._ib.GetCount(), gl.GL_UNSIGNED_INT,
+                          None)
 
 
 
@@ -112,8 +143,18 @@ class nearstars:
         # Update Vertex Buffer
         self._vb.Fill(vsa)
 
-        # Shader
-        self._shader = shd.Shader(shaders_path + 'Star.glsl')
+        # Shaders:
+        # - InitShader
+        # - PeelShader
+        self._InitShader = shd.Shader(shaders_path + 'StarInit.glsl')
+        self._PeelShader = shd.Shader(shaders_path + 'StarPeel.glsl')
+
+        # Uniforms
+        # - MVP
+        self._mvp = np.array([[1., 0., 0., 0.],
+                              [0., 1., 0., 0.],
+                              [0., 0., 1., 0.],
+                              [0., 0., 0., 1.]], dtype = 'single')
 
 
     # Function which updates the vertex buffer depending on the the center
@@ -141,58 +182,74 @@ class nearstars:
         # Update Vertex Buffer
         self._vb.Fill(vsa)
 
+    # Update Model View Projection Matrix
+    def UpdateMVP(self, mvp):
+        self._mvp = mvp
+
+    # Bind self._InitShader
+    def BindInitShader(self):
+        self._InitShader.Bind()
+        self._InitShader.SetUniformMat4f('u_MVP', self._mvp)
+
+    # Bind self._PeelShader
+    def BindPeelShader(self, screensize = np.array([100, 100], dtype =
+                                                   'single')):
+        self._PeelShader.Bind()
+        self._PeelShader.SetUniformMat4f('u_MVP', self._mvp)
+        self._PeelShader.SetUniform2fv('u_Res', screensize)
+        # The Depth Texture and the Front Blending Texture are bindend
+        # respectively to the zeroth and the first slot
+        self._PeelShader.SetUniform1i('u_DepthTex', 0)
+        self._PeelShader.SetUniform1i('u_FrontBlender', 1)
+
     # Drawing funtion
-    def Draw(self, mvp, renderer):
-        self._shader.Bind()
-        self._shader.SetUniformMat4f('u_MVP', mvp)
-
-        renderer.DrawP(self._va, self._shader, 0, self._count)
+    def Draw(self):
+        self._va.Bind()
+        gl.glDrawArrays(gl.GL_POINTS, 0, self._count)
 
 
 
-#  ______________________________________________
-# |                                              |
-# | Old code used during some of the first tests |
-# |______________________________________________|
-#
-
-
-
-quads_vertices = np.array([-2.5, -2.5, 0.,      1.0, 1.0, 0.0,
-                            2.5, -2.5, 0.,      1.0, 1.0, 0.0,
-                            2.5,  2.5, 0.,      1.0, 1.0, 0.0,
-                           -2.5,  2.5, 0.,      1.0, 1.0, 0.0,
-
-                           -2.5, -2.5, 5.,      0.0, 0.0, 1.0,
-                            2.5, -2.5, 5.,      0.0, 0.0, 1.0,
-                            2.5,  2.5, 5.,      0.0, 0.0, 1.0,
-                           -2.5,  2.5, 5.,      0.0, 0.0, 1.0],
-                           dtype = 'single')
-
-quads_indices = np.array([0, 1, 2,
-                          2, 3, 0,
-
-                          4, 5, 6,
-                          6, 7, 4],
-                          dtype = 'uintc')
-
-class TestQuads:
+class Canvas:
 
     def __init__(self):
+
+        CanvasVertices = np.array([-1.0, -1.0,      0.0, 0.0,
+                                    1.0, -1.0,      1.0, 0.0,
+                                    1.0,  1.0,      1.0, 1.0,
+                                   -1.0,  1.0,      0.0, 1.0],
+                                  dtype = 'single')
+
+        CanvasIndices = np.array([0, 1, 2,
+                                  2, 3, 0],
+                                 dtype = 'uintc')
+
         self._va = va.VertexArray()
-        self._vb = vb.VertexBuffer(quads_vertices)
+        self._vb = vb.VertexBuffer(CanvasVertices)
 
         self._layout = vbl.VertexBufferLayout()
-        self._layout.PushFloat(3)
-        self._layout.PushFloat(3)
+        self._layout.PushFloat(2)
+        self._layout.PushFloat(2)
         self._va.AddBuffer(self._layout)
 
-        self._ib = ib.IndexBuffer(quads_indices)
+        self._ib = ib.IndexBuffer(CanvasIndices)
 
-        self._shader = shd.Shader(shaders_path + 'TestQuads.glsl')
+        self._BlendShader = shd.Shader(shaders_path + 'CanvasBlend.glsl')
+        self._FinalShader = shd.Shader(shaders_path + 'CanvasFinal.glsl')
 
-    def Draw(self, mvp, renderer):
-        self._shader.Bind()
-        self._shader.SetUniformMat4f('u_MVP', mvp)
+    def BindBlendShader(self):
+        self._BlendShader.Bind()
+        # The Back Temporary Texture is bindend to the zeroth slot
+        self._BlendShader.SetUniform1i('u_BackTemp', 0)
 
-        renderer.DrawT(self._va, self._ib, self._shader)
+    def BindFinalShader(self):
+        self._FinalShader.Bind()
+        # The Front Blending Texture and the Back Blending Texture are binded
+        # respectively  to the zeroth and the first slot
+        self._FinalShader.SetUniform1i('u_FrontBlender', 0)
+        self._FinalShader.SetUniform1i('u_BackBlender', 1)
+
+    def Draw(self):
+        self._va.Bind()
+        self._ib.Bind()
+        gl.glDrawElements(gl.GL_TRIANGLES, self._ib.GetCount(),
+                          gl.GL_UNSIGNED_INT, None)

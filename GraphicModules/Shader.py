@@ -101,10 +101,13 @@ class Shader:
         gl.glUniform1i(self._GetUniformLocation(name), value)
 
     def SetUniform1f(self, name, value):
-        gl.glUniformr1f(self._GetUniformLocation(name), value)
+        gl.glUniform1f(self._GetUniformLocation(name), value)
 
     def SetUniform4f(self, name, v0, v1, v2, v3):
         gl.glUniform4f(self._GetUniformLocation(name), v0, v1, v2, v3)
+
+    def SetUniform2fv(self, name, vector):
+        gl.glUniform2fv(self._GetUniformLocation(name), 1, vector)
 
     def SetUniformMat4f(self, name, matrix):
         gl.glUniformMatrix4fv(self._GetUniformLocation(name), 1, gl.GL_FALSE, matrix)

@@ -15,17 +15,14 @@ def main():
     display = (800, 600)
 
     pygame.display.gl_set_attribute(GL_MULTISAMPLEBUFFERS, 1)
-    pygame.display.gl_set_attribute(GL_MULTISAMPLESAMPLES, 4)
+    pygame.display.gl_set_attribute(GL_MULTISAMPLESAMPLES, 8)
 
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
 
     clock = pygame.time.Clock()
 
-    gl.glEnable(gl.GL_BLEND)
-    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
     gl.glEnable(gl.GL_POINT_SPRITE)
     gl.glEnable(gl.GL_PROGRAM_POINT_SIZE)
-    gl.glEnable(gl.GL_DEPTH_TEST)
     gl.glEnable(gl.GL_MULTISAMPLE)
 
     av_pos = 60.0
@@ -35,7 +32,7 @@ def main():
     proj = mm.perspective(60., display[0] / display[1], 10., 20000.)
     viewt = mm.viewtranslation(0, 0, 25)
 
-    renderer = rnd.Renderer()
+    renderer = rnd.DualDepthPeelingRenderer(*display)
 
     grid = obj.Grid()
     stars = obj.nearstars()
@@ -102,8 +99,10 @@ def main():
         mvp = mm.matrixmultiplication(viewr, viewt, proj)
         mvpstar = mm.matrixmultiplication(modelt, viewr, viewt, proj)
 
-        grid.Draw(mvp, renderer)
-        stars.Draw(mvpstar, renderer)
+        grid.UpdateMVP(mvp)
+        stars.UpdateMVP(mvpstar)
+
+        renderer.Render(grid, stars)
 
         pygame.display.flip()
 
